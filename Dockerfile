@@ -12,14 +12,16 @@ RUN apt-get update \
         netcat \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin
 
+# Configure entrypoint and command
+COPY entrypoint.sh /
+
 # Get Mattermost
 RUN mkdir -p /mattermost/data \
     && curl https://releases.mattermost.com/$MM_VERSION/mattermost-team-$MM_VERSION-linux-amd64.tar.gz | tar -xvz \
     && cp /mattermost/config/config.json /config.json.save \
-    && rm -rf /mattermost/config/config.json
+    && rm -rf /mattermost/config/config.json \
+    && chmod +x /entrypoint.sh
 
-# Configure entrypoint and command
-COPY entrypoint.sh /
 ENTRYPOINT ["/entrypoint.sh"]
 WORKDIR /mattermost/bin
 CMD ["platform"]
