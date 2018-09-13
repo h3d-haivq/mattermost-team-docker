@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Function to generate a random salt
 generate_salt() {
@@ -14,10 +14,10 @@ MM_DBNAME=${MM_DBNAME:-mattermost}
 MM_CONFIG=${MM_CONFIG:-/mattermost/config/config.json}
 
 if [ "${1:0:1}" = '-' ]; then
-    set -- platform "$@"
+    set -- mattermost "$@"
 fi
 
-if [ "$1" = 'platform' ]; then
+if [ "$1" = 'mattermost' ]; then
   # Check CLI args for a -config option
   for ARG in $@;
   do
@@ -35,7 +35,7 @@ if [ "$1" = 'platform' ]; then
     # Copy default configuration file
     cp /config.json.save $MM_CONFIG
     # Substitue some parameters with jq
-    jq '.ServiceSettings.ListenAddress = ":80"' $MM_CONFIG > $MM_CONFIG.tmp && mv $MM_CONFIG.tmp $MM_CONFIG
+    jq '.ServiceSettings.ListenAddress = ":8000"' $MM_CONFIG > $MM_CONFIG.tmp && mv $MM_CONFIG.tmp $MM_CONFIG
     jq '.LogSettings.EnableConsole = false' $MM_CONFIG > $MM_CONFIG.tmp && mv $MM_CONFIG.tmp $MM_CONFIG
     jq '.LogSettings.ConsoleLevel = "INFO"' $MM_CONFIG > $MM_CONFIG.tmp && mv $MM_CONFIG.tmp $MM_CONFIG
     jq '.FileSettings.Directory = "/mattermost/data/"' $MM_CONFIG > $MM_CONFIG.tmp && mv $MM_CONFIG.tmp $MM_CONFIG
@@ -50,6 +50,7 @@ if [ "$1" = 'platform' ]; then
     jq '.RateLimitSettings.Enable = true' $MM_CONFIG > $MM_CONFIG.tmp && mv $MM_CONFIG.tmp $MM_CONFIG
     jq '.SqlSettings.DriverName = "postgres"' $MM_CONFIG > $MM_CONFIG.tmp && mv $MM_CONFIG.tmp $MM_CONFIG
     jq '.SqlSettings.AtRestEncryptKey = "'$(generate_salt)'"' $MM_CONFIG > $MM_CONFIG.tmp && mv $MM_CONFIG.tmp $MM_CONFIG
+    jq '.PluginSettings.Directory = "/mattermost/plugins/"' $MM_CONFIG > $MM_CONFIG.tmp && mv $MM_CONFIG.tmp $MM_CONFIG
   else
     echo "Using existing config file" $MM_CONFIG
   fi
@@ -58,7 +59,9 @@ if [ "$1" = 'platform' ]; then
   if [ -z "$MM_SQLSETTINGS_DATASOURCE" ]
   then
     echo -ne "Configure database connection..."
-    export MM_SQLSETTINGS_DATASOURCE="postgres://$MM_USERNAME:$MM_PASSWORD@$DB_HOST:$DB_PORT_NUMBER/$MM_DBNAME?sslmode=disable&connect_timeout=10"
+    # URLEncode the password, allowing for special characters
+    ENCODED_PASSWORD=$(printf %s $MM_PASSWORD | jq -s -R -r @uri)
+    export MM_SQLSETTINGS_DATASOURCE="postgres://$MM_USERNAME:$ENCODED_PASSWORD@$DB_HOST:$DB_PORT_NUMBER/$MM_DBNAME?sslmode=disable&connect_timeout=10"
     echo OK
   else
     echo "Using existing database connection"
@@ -75,7 +78,7 @@ if [ "$1" = 'platform' ]; then
   # Necessary to avoid "panic: Failed to open sql connection pq: the database system is starting up"
   sleep 1
 
-  echo "Starting platform"
+  echo "Starting mattermost"
 fi
 
 exec "$@"
