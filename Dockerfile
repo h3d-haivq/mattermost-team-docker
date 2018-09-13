@@ -31,8 +31,6 @@ RUN mkdir -p /mattermost/data \
     && adduser -D -u ${PUID} -G mattermost -h /mattermost -D mattermost \
     && chown -R mattermost:mattermost /mattermost /config.json.save
 
-USER mattermost
-
 #Healthcheck to make sure container is ready
 HEALTHCHECK CMD curl --fail http://localhost:8000 || exit 1
 
@@ -40,6 +38,8 @@ HEALTHCHECK CMD curl --fail http://localhost:8000 || exit 1
 COPY entrypoint.sh /
 RUN chmod +x /entrypoint.sh
 WORKDIR /mattermost
+
+USER mattermost
 
 # Expose port 8000 of the container
 EXPOSE 8000
