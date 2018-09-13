@@ -38,12 +38,14 @@ HEALTHCHECK CMD curl --fail http://localhost:8000 || exit 1
 
 # Configure entrypoint and command
 COPY entrypoint.sh /
-ENTRYPOINT ["/entrypoint.sh"]
+RUN chmod +x /entrypoint.sh
 WORKDIR /mattermost
-CMD ["mattermost"]
 
 # Expose port 8000 of the container
 EXPOSE 8000
 
 # Declare volumes for mount point directories
 VOLUME ["/mattermost/data", "/mattermost/logs", "/mattermost/config", "/mattermost/plugins"]
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["mattermost"]
