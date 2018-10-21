@@ -35,15 +35,14 @@ RUN mkdir -p /mattermost/data /mattermost/plugins /mattermost/client/plugins \
     && adduser -D -u ${PUID} -G mattermost -h /mattermost -D mattermost \
     && chown -R mattermost:mattermost /mattermost /config.json.save /mattermost/plugins /mattermost/client/plugins
 
+COPY entrypoint.sh /
+
+RUN chmod +x /entrypoint.sh
+
 USER mattermost
 
 #Healthcheck to make sure container is ready
 HEALTHCHECK CMD curl --fail http://localhost:8000 || exit 1
-
-# Configure entrypoint and command
-COPY entrypoint.sh /
-
-RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
 WORKDIR /mattermost
