@@ -1,0 +1,23 @@
+{
+	"Directory": "./data/",
+
+	"Profiles": [
+		{
+			"Name": "Orders",
+			"Channels": ["#orders"],
+
+			"Email": {
+				"ImapServer": "imap.example.com:143",
+				"Username": "orders@example.com",
+				"Password": "password"
+			},
+
+			"Mattermost": {
+				"Server": "https://mattermost.example.com",
+				"Team": "team1",
+				"User": "mattermail@example.com",
+				"Password": "password"
+			}
+		}
+	]
+}
