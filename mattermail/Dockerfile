@@ -7,4 +7,4 @@ COPY . /mattermail/
 
 RUN chmod +x /mattermail/mattermail
 
-ENTRYPOINT ["/mattermail/mattermail"]
+CMD ["/mattermail/mattermail"]
