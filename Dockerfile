@@ -1,14 +1,14 @@
-FROM alpine:3.8
+FROM alpine:3.10
 
 # Some ENV variables
 ENV PATH="/mattermost/bin:${PATH}"
-ENV MM_VERSION=5.12.0
+ENV MM_VERSION=5.20.1
 
 # Build argument to set Mattermost edition
 ARG edition=team
 ARG PUID=2000
 ARG PGID=2000
-#ARG MM_BINARY=
+ARG MM_BINARY=
 
 
 # Install some needed packages
@@ -18,10 +18,12 @@ RUN apk add --no-cache \
 	jq \
 	libc6-compat \
 	libffi-dev \
+	libcap \
 	linux-headers \
 	mailcap \
 	netcat-openbsd \
 	xmlsec-dev \
+	tzdata \
 	&& rm -rf /tmp/*
 
 # Get Mattermost
@@ -33,19 +35,19 @@ RUN mkdir -p /mattermost/data /mattermost/plugins /mattermost/client/plugins \
     && rm -rf /mattermost/config/config.json \
     && addgroup -g ${PGID} mattermost \
     && adduser -D -u ${PUID} -G mattermost -h /mattermost -D mattermost \
-    && chown -R mattermost:mattermost /mattermost /config.json.save /mattermost/plugins /mattermost/client/plugins
-
-COPY entrypoint.sh /
-
-RUN chmod +x /entrypoint.sh
+    && chown -R mattermost:mattermost /mattermost /config.json.save /mattermost/plugins /mattermost/client/plugins \
+    && setcap cap_net_bind_service=+ep /mattermost/bin/mattermost
 
 USER mattermost
 
 #Healthcheck to make sure container is ready
 HEALTHCHECK CMD curl --fail http://localhost:8000 || exit 1
 
-ENTRYPOINT ["/entrypoint.sh"]
+COPY entrypoint.sh /
+RUN chmod +x /entrypoint.sh
+
 WORKDIR /mattermost
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["mattermost"]
 
 # Expose port 8000 of the container
